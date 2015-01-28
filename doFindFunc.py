@@ -36,36 +36,74 @@ def nextchar(txt, i):
             return txt[i:i+1];
     return None
 
+class CodeFunc():
+    "function object"
+    def __init__(self, prefix, ret_type, name, args, body, classname=''):
+        self.prefix = prefix;
+        self.ret_type = ret_type;
+        self.name = name
+        self.args = args
+        self.body = body
+        self.classname = classname
+
 p_func = re.compile(r'(public|private)?\s*((\w+\s+)?\w+)\s*\(([^()]*)\)\s*{')
 def parsefunction(txt, classname):
-    pos = 0
+    start = 0
+    end = 0
+    codefuc = None
     m = p_func.search(txt)
     if m is not None:
         txt_tmp = txt[m.end():]
         pos = getmatch(txt_tmp, '{', '}', 1)
-        # ('','HandoverTransfer findHandoverTransfer', 'HandoverTransfer ', 'String sourceAddress, boolean incoming'), 
+        start = m.start()
+        end = m.end()+pos+1
         if nextchar(txt_tmp, pos+1) == ';':
-            pos = m.end()+pos+1
-            print "######### here is anonymous class ###########"
+            # TODO: here is anonymous class
+            pass
         else:
             # here is an normal function!
-            pos = m.end()+pos+1
-            #func_content = txt[m.start():pos]
-            m_prefix = m.group(1)
-            m_ret_type = m.group(3)
-            m_name = m.group(2)[len(m_ret_type):]
-            m_args = m.group(4)
-            func_content_cpp = m_ret_type + classname + "::" + m_name +'(' + m_args + ') {' + txt[m.end():pos]
-            print func_content_cpp
+            # ('','HandoverTransfer findHandoverTransfer', 'HandoverTransfer ', 'String sourceAddress, boolean incoming'), 
+            m_prefix = ''
+            if m.group(1) is not None:
+                m_prefix = m.group(1).strip()
+            m_ret_type = ''
+            if m.group(3) is not None:
+                m_ret_type = m.group(3).strip()
+            m_name = m.group(2)[len(m_ret_type):].strip()
+            m_args = ''
+            if m.group(4) is not None:
+                m_args = m.group(4)
+            codefuc = CodeFunc(m_prefix, m_ret_type, m_name, m_args, txt[m.end():end], classname)
 
-    return pos
+    return (start, end, codefuc)
 
 def parseClassFunction(txt, classname):
+    funclist = []
     while True:
-        ret = parsefunction(txt, classname)
-        if ret == 0:
+        start,end,codefunc = parsefunction(txt, classname)
+        if end == 0:
             break
-        txt = txt[ret:]
+        funclist.append(codefunc)
+        txt = txt[end:]
+    return funclist
+
+def createHeadFile(funclist):
+    print "===============h==============="
+    for f in funclist:
+        if f is None:
+            continue
+        func = f.prefix + ' '+ f.ret_type + ' ' + f.name +'(' + f.args + ');'
+        print func
+
+def createCppFile(funclist):
+    print "===============cpp============="
+    for f in funclist:
+        if f is None:
+            continue
+        func = f.prefix + ' '+ f.ret_type + ' ' + f.classname +'::' + f.name + \
+               '(' + f.args + ') {' + f.body + ';'
+        print func
+        print
 
 p_class = re.compile(r"(public|private)?\s*(static)?\s*(final)?\s*class\s*(\w+)\s*(extends\s+(\w+))?\s*(implements)?\s*([^{]*){")
 def parsejava(txt):
@@ -89,7 +127,10 @@ def parsejava(txt):
 
         # produce class function name
         class_txt = iter_txt_tmp[:pos]
-        parseClassFunction(class_txt, m_class_name)
+        funclist = parseClassFunction(class_txt, m_class_name)
+        #print "funclist:", funclist
+        createHeadFile(funclist)
+        createCppFile(funclist)
 
 parsejava(javatxt);
 
