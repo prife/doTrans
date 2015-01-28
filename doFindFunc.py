@@ -1,4 +1,4 @@
-#!//usr/bin/python
+#!/usr/bin/python
 
 # encoding: UTF-8
 import sys
@@ -60,12 +60,18 @@ def parsefunction(txt, classname):
 
     return pos
 
+def parseClassFunction(txt, classname):
+    while True:
+        ret = parsefunction(txt, classname)
+        if ret == 0:
+            break
+        txt = txt[ret:]
+
 p_class = re.compile(r"(public|private)?\s*(static)?\s*(final)?\s*class\s*(\w+)\s*(extends\s+(\w+))?\s*(implements)?\s*([^{]*){")
 def parsejava(txt):
-    i = 0
     new_txt = ''
     iter_txt = txt
-    while i < len(iter_txt):
+    while True:
         m = p_class.search(iter_txt)
         if m is None:
             break;
@@ -83,12 +89,7 @@ def parsejava(txt):
 
         # produce class function name
         class_txt = iter_txt_tmp[:pos]
-        j = 0
-        while j < len(class_txt):
-            ret = parsefunction(class_txt, m_class_name)
-            if ret == 0:
-                break
-            class_txt= class_txt[ret:]
+        parseClassFunction(class_txt, m_class_name)
 
 parsejava(javatxt);
 
