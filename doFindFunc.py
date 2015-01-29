@@ -38,15 +38,21 @@ def nextchar(txt, i):
 
 class CodeFunc():
     "function object"
-    def __init__(self, prefix, ret_type, name, args, body, classname=''):
+    def __init__(self, prefix, ret_type, name, args, throws, body, classname=''):
         self.prefix = prefix;
         self.ret_type = ret_type;
         self.name = name
         self.args = args
         self.body = body
         self.classname = classname
+        self.throws = throws
 
-p_func = re.compile(r'(public|private)?\s*((\w+\s+)?\w+)\s*\(([^()]*)\)\s*{')
+#p_func = re.compile(r'(public|private)?\s*((\w+\s+)?\w+)\s*\(([^()]*)\)([^{]*){')
+#FIXME: does '\w' can be redefined?
+jw=r"[a-zA-Z0-9_<>\[\]]+"
+jret_name=r"((" + jw + r"\s+)?" + jw + r")"
+p_func = re.compile(r'(public|private)?\s*' + jret_name + r'\s*\(([^()]*)\)([^{]*){')
+
 def parsefunction(txt, classname):
     start = 0
     end = 0
@@ -73,7 +79,11 @@ def parsefunction(txt, classname):
             m_args = ''
             if m.group(4) is not None:
                 m_args = m.group(4)
-            codefuc = CodeFunc(m_prefix, m_ret_type, m_name, m_args, txt[m.end():end], classname)
+
+            m_throws = ''
+            if m.group(5) is not None:
+                m_throws = m.group(5)
+            codefuc = CodeFunc(m_prefix, m_ret_type, m_name, m_args, m_throws, txt[m.end():end], classname)
 
     return (start, end, codefuc)
 
