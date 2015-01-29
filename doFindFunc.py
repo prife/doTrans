@@ -49,9 +49,9 @@ class CodeFunc():
 
 #p_func = re.compile(r'(public|private)?\s*((\w+\s+)?\w+)\s*\(([^()]*)\)([^{]*){')
 #FIXME: does '\w' can be redefined?
-jw=r"[a-zA-Z0-9_<>\[\]]+"
+jw=r"[a-zA-Z0-9_<>\[\].?]+"
 jret_name=r"((" + jw + r"\s+)?" + jw + r")"
-p_func = re.compile(r'(public|private)?\s*' + jret_name + r'\s*\(([^()]*)\)([^{]*){')
+p_func = re.compile(r'(public|private)?\s*' + jret_name + r'\s*\(([^();]*)\)([^{;]*){')
 
 def parsefunction(txt, classname):
     start = 0
@@ -115,7 +115,7 @@ def createCppFile(funclist):
         print func
         print
 
-p_class = re.compile(r"(public|private)?\s*(static)?\s*(final)?\s*class\s*(\w+)\s*(extends\s+(\w+))?\s*(implements)?\s*([^{]*){")
+p_class = re.compile(r"(public|private)?\s*(static)?\s*(final)?\s*class\s*(\w+)\s*(extends\s+(\w+))?\s*(implements)?\s*([^{;]*){")
 def parsejava(txt):
     new_txt = ''
     iter_txt = txt
