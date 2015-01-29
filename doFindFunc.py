@@ -22,6 +22,18 @@ def getmatch(str, charopen, charclose, count = 0):
         i = i + 1;
     return i
 
+def getmatchBack(str, charopen, charclose, count = 0):
+    i = len(str)-1
+    while i > 0:
+        if (str[i] == charopen):
+            count = count + 1
+        elif (str[i] == charclose):
+            count = count - 1
+        if (count == 0):
+            break;
+        i = i - 1
+    return i
+
 def nextchar(txt, i):
     while i < len(txt):
         if txt[i] == '\n':
@@ -52,6 +64,33 @@ class CodeFunc():
 jw=r"[a-zA-Z0-9_<>\[\].?]+"
 jret_name=r"((" + jw + r"\s+)?" + jw + r")"
 p_func = re.compile(r'(public|private)?\s*' + jret_name + r'\s*\(([^();]*)\)([^{;]*){')
+
+def getwordBack(txt):
+    i = len(txt)-1
+    loop = 0
+    while i > 0 and loop < 2:
+        if txt[i] == ' ' or txt[i] == '\t' or txt[i] == '\n' or txt[i] == '\r':
+            if loop == 1:
+                start = i
+                break
+        else:
+            if loop == 0:
+                end = i
+                loop = loop + 1
+        i = i - 1
+    return txt[start:end+1]
+
+def fixJavaGeneralReturnType(txt, pos):
+    start = 0
+    end = pos
+    if txt[end] == '>':
+        tmp_txt = txt[:end+1]
+        ret = getmatchBack(tmp_txt, '>', '<', 0)
+        if ret != 0:
+            start = getwordBack(tmp_txt, ret-1)
+            return tmp_txt[start:]
+
+    return None
 
 def parsefunction(txt, classname):
     start = 0
